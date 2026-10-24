@@ -24,7 +24,41 @@ header .t{font-family:var(--serif);font-weight:700;font-size:15px;color:var(--mu
 .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--purple2),var(--pink));transition:width .6s ease}
 .count{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
 main{flex:1;display:flex;flex-direction:column;justify-content:center;padding:12px 0 24px}
-.scene{animation:in .7s ease both}
+.chap{padding:56px 0 44px;border-bottom:1px solid #2a2338;scroll-margin-top:110px}
+.pane[hidden]{display:none}
+.pane .chap:last-of-type{border-bottom:none}
+.chap:last-child{border-bottom:none}
+.chap:not(.inview) .draw,.chap:not(.inview) .pop,.chap:not(.inview) .hdot{animation-play-state:paused}
+.chap.cover{min-height:calc(100vh - 170px);display:flex;flex-direction:column;justify-content:center;padding-top:20px}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.quick a{font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);color:var(--ink);text-decoration:none;background:var(--bg2)}
+.quick a:hover{border-color:var(--purple)}
+.scrollhint{margin-top:34px;color:var(--mute);font-size:13px;animation:bob 2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(6px)}}
+header{position:sticky;top:0;z-index:20;flex-wrap:wrap;background:#16121f;margin:0 -16px;padding:10px 16px!important}
+.tabs{order:3;flex-basis:100%;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-top:8px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;padding:8px 14px;font-size:14px;background:transparent;color:var(--mute);border:1px solid var(--line);border-radius:999px}
+.tab[aria-selected="true"]{background:var(--purple2);color:#fff;border-color:var(--purple2)}
+.chapbar{order:4;flex-basis:100%;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-top:8px;margin-top:8px;border-top:1px solid var(--line)}
+.chapbar::-webkit-scrollbar{display:none}
+.chapbar[hidden]{display:none}
+.cb{white-space:nowrap;padding:6px 12px;font-size:13px;background:var(--bg2);color:var(--mute);border:1px solid var(--line);border-radius:10px}
+.cb[aria-current="true"]{color:var(--ink);border-color:var(--purple);background:#2e2443}
+.cb.done{color:#cbbfe0}
+.chap[hidden]{display:none}
+.chapnav{display:flex;justify-content:space-between;gap:10px;margin-top:36px;flex-wrap:wrap}
+.chapnav .btn-main{margin-left:auto}
+.panefoot{font-size:13px;color:var(--mute);padding:8px 0 40px;text-align:center}
+.panefoot a,a.jump{color:var(--purple)}
+.tocbtn{padding:7px 14px;font-size:13px;background:var(--bg2);color:var(--ink);border:1px solid var(--line)}
+#toc{position:absolute;right:16px;top:52px;width:min(320px,calc(100vw - 32px));max-height:70vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px;box-shadow:0 20px 50px -10px #000a;display:none}
+#toc.open{display:block}
+#toc a{display:block;padding:9px 12px;border-radius:10px;color:var(--ink);text-decoration:none;font-size:15px}
+#toc a small{display:block;color:var(--mute);font-size:12px}
+#toc a:hover,#toc a.cur{background:#2e2443}
+#toc .sep{font-size:12px;color:var(--purple);letter-spacing:.2em;padding:10px 12px 4px}
+.totop{display:block;margin:28px auto 0;background:transparent;color:var(--mute);border:1px solid var(--line)}
 @keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .kicker{font-size:13px;letter-spacing:.25em;color:var(--purple);margin-bottom:10px}
 h1{font-family:var(--serif);font-weight:900;font-size:clamp(30px,7vw,48px);line-height:1.35;margin-bottom:18px}
@@ -107,7 +141,7 @@ body.purple{background:radial-gradient(ellipse at 50% 30%,#3d2766 0%,var(--bg) 7
 .hlist{list-style:none;max-height:240px;overflow:auto;padding-right:4px}
 .hlist li{font-size:14px;padding:7px 0;border-bottom:1px solid var(--line);color:#e2dbee}
 @media (max-width:600px){.mapwrap{grid-template-columns:1fr}#twmap{max-width:340px;margin:0 auto}}
-@media (max-width:480px){p{font-size:16px}.bar{grid-template-columns:54px 1fr 52px}}
+@media (max-width:480px){.tab{flex:1;padding:7px 4px;font-size:13px;text-align:center}p{font-size:16px}.bar{grid-template-columns:54px 1fr 52px}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.draw{stroke-dashoffset:0}.pop{opacity:1}}
 </style>
 </head>
@@ -117,18 +151,15 @@ body.purple{background:radial-gradient(ellipse at 50% 30%,#3d2766 0%,var(--bg) 7
   <header>
     <div class="t">提早報到的小腳丫</div>
     <div class="progress"><i id="bar"></i></div>
-    <div class="count" id="count"></div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div class="chapbar" id="chapbar" aria-label="故事章節"></div>
   </header>
-  <main id="stage" aria-live="polite"></main>
-  <nav class="ctrl">
-    <button class="btn-ghost" id="prev">← 上一頁</button>
-    <button class="btn-main" id="next">開始 →</button>
-  </nav>
+  <main id="stage"></main>
 </div>
 
 <script>
 const $ = s => document.querySelector(s);
-const stage = $('#stage'), nextBtn = $('#next'), prevBtn = $('#prev');
+const stage = $('#stage');
 const state = { age:null, nicu:null, lit:false };
 
 /* ---------- data（國民健康署出生通報統計） ---------- */
@@ -158,21 +189,31 @@ function countUp(el, to, {dec=0, dur=1400, suffix=''}={}){
 }
 function ctyFill(n){const c=HOSP.filter(h=>h[0]===n).length;return c===0?'#2a2340':c<=1?'#3a2d58':c<=3?'#4d3b78':c<=6?'#634b9a':'#7a5cc0';}
 const motherName = () => '雅婷';
+const endAge = () => ageText() ? ageText()+'那年的雅婷，' : '雅婷';
 const ageText = () => state.age ? AGE.find(a=>a.k===state.age).label + ' 歲' : '';
 
 /* ---------- scenes ---------- */
 const scenes = [
 
 /* 0 封面 */
-{ cta:'開始閱讀 →', render(){ return `
+{ id:'top', cover:true, toc:'封面', short:'封面', render(){ return `
   <div class="kicker">一則以數據寫成的互動故事</div>
   <h1>提早報到的<br>小腳丫</h1>
   <p>這是一個虛構的家庭，<br>但故事裡的每一個數字，都來自衛生福利部國民健康署的<em>出生通報統計</em>。</p>
-  <p class="small">跟著故事往下走，你會做幾個選擇，也會親手點亮一些東西。約 4 分鐘。</p>
+  <p class="small">故事共八章，約 4 分鐘，可以從上方章節按鈕跳到任何一章。補助、成長追蹤與醫院地圖，請點最上方的分頁。</p>
+  <div class="card" style="margin-top:22px">
+    <p style="margin-bottom:4px"><b>家裡有早產寶寶？直接看實用資訊</b></p>
+    <div class="quick">
+      <a href="#subsidy">💜 補助與健保給付</a>
+      <a href="#followup">🩺 成長追蹤科別</a>
+      <a href="#map">🗺️ 醫院地圖</a>
+      <a href="#c4">⚠️ 早產徵兆</a>
+    </div>
+  </div>
 `}},
 
 /* 1 一百個寶寶 */
-{ gate:true, render(){ return `
+{ toc:'一百個新生兒', short:'序章', render(){ return `
   <div class="kicker">序章 · 一百個新生兒</div>
   <h2>如果把台灣一年出生的寶寶，縮小成 100 個</h2>
   <p>每一個圓點，代表一個剛來到世界的新生兒。你覺得，裡面有幾個是<em>懷孕未滿 37 週</em>就出生的？</p>
@@ -197,7 +238,7 @@ const scenes = [
 }},
 
 /* 2 雅婷 · 選年齡 */
-{ gate:true, render(){ return `
+{ toc:'雅婷', short:'一 雅婷', render(){ return `
   <div class="kicker">第一章 · 雅婷</div>
   <div class="story"><p>雅婷懷孕了。產檢本上的預產期，寫在明年二月。</p><p>她把超音波照片貼在冰箱上，每天早上都要看一眼。</p></div>
   <h2>雅婷今年幾歲？</h2>
@@ -217,6 +258,7 @@ const scenes = [
       </div>
       <p class="small">25–29 歲最低；未滿 20 歲與 35 歲以上都偏高，而且年齡越高越明顯。國健署公布的這份資料未列出 20–24 與 30–34 歲兩組數字，因此這裡不顯示。</p>
     </div>`;
+    if($('#endAge')) $('#endAge').textContent=endAge();
     requestAnimationFrame(()=>document.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'));
     unlock();
   };
@@ -229,7 +271,7 @@ const scenes = [
 }},
 
 /* 3 趨勢 */
-{ render(){
+{ toc:'不只是雅婷', short:'二 趨勢', render(){
   const W=640,H=300,L=46,R=20,T=24,B=40;
   const x=y=>L+(y-2006)/(2024-2006)*(W-L-R);
   const yv=v=>T+(12-v)/(12-8)*(H-T-B);
@@ -252,7 +294,7 @@ const scenes = [
 `}},
 
 /* 4 早產徵兆 */
-{ render(){ return `
+{ id:'c4', toc:'二十九週', short:'三 29週', render(){ return `
   <div class="kicker">第三章 · 二十九週</div>
   <div class="story">
     <p>懷孕第 29 週的一個深夜，雅婷被一陣一陣的腹痛弄醒。</p>
@@ -265,7 +307,7 @@ const scenes = [
 `}},
 
 /* 5 體重 */
-{ gate:true, render(){ return `
+{ toc:'一千一百八十公克', short:'四 體重', render(){ return `
   <div class="kicker">第四章 · 一千一百八十公克</div>
   <h2>小豆有多小？</h2>
   <p>拖動滑桿，看看不同出生體重的寶寶。試著找到小豆的體重：<em>1,180 公克</em>。</p>
@@ -300,7 +342,7 @@ const scenes = [
 }},
 
 /* 6 NICU 選擇 */
-{ gate:true, render(){ return `
+{ toc:'保溫箱旁', short:'五 保溫箱', render(){ return `
   <div class="kicker">第五章 · 保溫箱旁</div>
   <div class="story"><p>新生兒加護病房很安靜，只有機器規律的聲音。小豆躺在保溫箱裡，身上貼著好幾條線。</p>
   <p>護理師說：「媽媽，你可以做點什麼。」</p></div>
@@ -330,7 +372,7 @@ const scenes = [
 }},
 
 /* 7 地方差距 */
-{ gate:true, render(){ return `
+{ toc:'住在哪裡也有差', short:'六 城鄉', render(){ return `
   <div class="kicker">第六章 · 住在哪裡也有差</div>
   <h2>同樣 100 個寶寶，換到台東呢？</h2>
   <p>雅婷在病房認識了一位從台東轉診來的媽媽。她說，家鄉附近要找到能照顧這麼小的寶寶的醫院，並不容易。</p>
@@ -355,7 +397,7 @@ const scenes = [
 }},
 
 /* 8 回家 */
-{ render(){ return `
+{ id:'home', toc:'回家以後', short:'七 回家', render(){ return `
   <div class="kicker">第七章 · 回家以後</div>
   <div class="story"><p>小豆在醫院住了兩個多月。出院那天，雅婷反而更緊張了：沒有監視器、沒有護理師，萬一她吐奶、哭不停怎麼辦？</p>
   <p>出院前，醫院的個管師給了她一支專線電話，說之後會有人到家裡看看小豆。</p></div>
@@ -370,40 +412,8 @@ const scenes = [
   </div>
   <p class="small">統計截至 114 年 9 月底，累計數字。</p>
 
-  <h2 style="margin-top:34px">離家最近的醫院在哪裡？</h2>
-  <p>從台東轉診來的那位媽媽說，她們從家裡到醫院，要開好久的車。下面是衛福部評定的<em>重度級急救責任醫院</em>，具備最高等級的緊急醫療能力。點選縣市，看看那裡有幾家。</p>
-  <div class="mapwrap">
-    <svg id="twmap" viewBox="0 0 ${MAP_W} ${MAP_H}" role="img" aria-label="台灣重度級急救責任醫院分布圖">
-      <defs><filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-      ${COUNTIES.map(c=>`<path class="cty" data-n="${c.n}" d="${c.d}" style="fill:${ctyFill(c.n)}"><title>${c.n}</title></path>`).join('')}
-      ${HOSP.map((h,i)=>`<circle class="hdot" data-n="${h[0]}" cx="${h[2]}" cy="${h[3]}" r="3.6" style="animation-delay:${i*25}ms"/>`).join('')}
-      <text x="30" y="272" class="maplab">澎湖縣</text>
-      <text x="10" y="20" class="maplab">● 重度級急救責任醫院</text>
-    </svg>
-    <div class="mapside">
-      <select id="ctysel" aria-label="選擇縣市"></select>
-      <div id="ctyinfo"></div>
-    </div>
-  </div>
-  <p class="small">共 54 家（依衛福部「急救責任醫院分區名單」，115 年更新）。醫院位置為示意，非精確地址。金門縣、連江縣、澎湖縣目前沒有重度級醫院。急救責任醫院分級反映整體緊急醫療能力，不等同於各院新生兒加護病房的收治條件，待產或轉診請依產檢醫師建議。</p>
+  <div class="card"><p style="margin:0">想知道離家最近、具備重度級急救能力的醫院在哪裡？👉 <a class="jump" href="#map">打開醫院地圖</a></p></div>
 `}, mount(){
-  const counts={};HOSP.forEach(h=>counts[h[0]]=(counts[h[0]]||0)+1);
-  const names=[...COUNTIES.map(c=>c.n),'金門縣','連江縣'];
-  const order=['基隆市','臺北市','新北市','桃園市','新竹市','新竹縣','苗栗縣','臺中市','彰化縣','南投縣','雲林縣','嘉義市','嘉義縣','臺南市','高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣'].filter(n=>names.includes(n));
-  $('#ctysel').innerHTML=order.map(n=>`<option value="${n}">${n}（${counts[n]||0} 家）</option>`).join('');
-  const pick=n=>{
-    $('#ctysel').value=n;
-    document.querySelectorAll('.cty').forEach(p=>p.classList.toggle('sel',p.dataset.n===n));
-    document.querySelectorAll('.hdot').forEach(d=>d.classList.toggle('sel',d.dataset.n===n));
-    const list=HOSP.filter(h=>h[0]===n);
-    $('#ctyinfo').innerHTML=`<div class="reveal"><p style="font-family:var(--serif);font-size:22px;font-weight:700;margin:10px 0 2px">${n}</p>
-      <p style="margin-bottom:8px"><span class="big" style="font-size:40px">${list.length}</span> 家重度級急救責任醫院</p>
-      ${list.length?`<ul class="hlist">${list.map(h=>`<li>${h[1]}</li>`).join('')}</ul>`:`<p class="small">目前沒有重度級醫院，緊急或高危險情況可能需要跨縣市轉診。</p>`}
-      ${n==='臺東縣'?`<p class="small" style="color:var(--pink)">臺東是全國早產比率最高的縣市（14.13%），全縣只有 1 家重度級醫院。</p>`:''}</div>`;
-  };
-  document.querySelectorAll('.cty').forEach(p=>p.onclick=()=>pick(p.dataset.n));
-  $('#ctysel').onchange=e=>pick(e.target.value);
-  pick('臺東縣');
   document.querySelectorAll('.stat b[data-n]').forEach((b,i)=>setTimeout(()=>{
     const s=b.dataset.s||'';
     if(s==='≈'){ countUp(b,+b.dataset.n); setTimeout(()=>b.textContent='近 3 萬',1500); }
@@ -412,8 +422,8 @@ const scenes = [
 }},
 
 /* 8.5 成長追蹤 */
-{ gate:true, render(){ return `
-  <div class="kicker">第八章 · 回診的日子</div>
+{ id:'followup', tab:'follow', render(){ return `
+  <div class="kicker">實用資訊 · 成長追蹤</div>
   <div class="story"><p>出院後，雅婷的手機行事曆塞滿了回診。新生兒科、兒科、神經科、復健科⋯⋯她一開始搞不清楚，為什麼要看這麼多科。</p>
   <p>醫師告訴她：「早產兒的成長要追蹤，不是因為一定有問題，而是越早發現，越來得及幫忙。」</p></div>
   <h2>點開每一科，看看他們在追蹤什麼</h2>
@@ -459,8 +469,8 @@ const scenes = [
 }},
 
 /* 9 補助 */
-{ gate:true, render(){ return `
-  <div class="kicker">第九章 · 雅婷沒想到的事</div>
+{ id:'subsidy', tab:'subsidy', render(){ return `
+  <div class="kicker">實用資訊 · 補助與健保給付</div>
   <div class="story"><p>住院的那兩個多月，雅婷最怕的其實是帳單。後來她才發現，有好幾項費用，健保和政府都幫忙分擔了。</p></div>
   <h2>如果你的寶寶也提早報到，可以用到哪些官方資源？</h2>
   <p>輸入出生週數與體重，看看可能符合哪些<em>健保給付與政府服務</em>。預設值是小豆的：29 週、1,180 公克。</p>
@@ -499,11 +509,50 @@ const scenes = [
   wk.oninput=upd; bw.oninput=upd; upd();
 }},
 
+/* 11 醫院地圖 */
+{ id:'map', tab:'map', render(){ return `
+  <div class="kicker">實用資訊 · 醫院地圖</div>
+  <h2>離家最近的醫院在哪裡？</h2>
+  <p>下面是衛福部評定的<em>重度級急救責任醫院</em>，具備最高等級的緊急醫療能力。點選縣市，看看那裡有幾家。</p>
+  <div class="mapwrap">
+    <svg id="twmap" viewBox="0 0 ${MAP_W} ${MAP_H}" role="img" aria-label="台灣重度級急救責任醫院分布圖">
+      <defs><filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      ${COUNTIES.map(c=>`<path class="cty" data-n="${c.n}" d="${c.d}" style="fill:${ctyFill(c.n)}"><title>${c.n}</title></path>`).join('')}
+      ${HOSP.map((h,i)=>`<circle class="hdot" data-n="${h[0]}" cx="${h[2]}" cy="${h[3]}" r="3.6" style="animation-delay:${i*25}ms"/>`).join('')}
+      <text x="30" y="272" class="maplab">澎湖縣</text>
+      <text x="10" y="20" class="maplab">● 重度級急救責任醫院</text>
+    </svg>
+    <div class="mapside">
+      <select id="ctysel" aria-label="選擇縣市"></select>
+      <div id="ctyinfo"></div>
+    </div>
+  </div>
+  <p class="small">共 54 家（依衛福部「急救責任醫院分區名單」，115 年更新）。醫院位置為示意，非精確地址。金門縣、連江縣、澎湖縣目前沒有重度級醫院。急救責任醫院分級反映整體緊急醫療能力，不等同於各院新生兒加護病房的收治條件，待產或轉診請依產檢醫師建議。</p>
+`}, mount(){
+  const counts={};HOSP.forEach(h=>counts[h[0]]=(counts[h[0]]||0)+1);
+  const names=[...COUNTIES.map(c=>c.n),'金門縣','連江縣'];
+  const order=['基隆市','臺北市','新北市','桃園市','新竹市','新竹縣','苗栗縣','臺中市','彰化縣','南投縣','雲林縣','嘉義市','嘉義縣','臺南市','高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣'].filter(n=>names.includes(n));
+  $('#ctysel').innerHTML=order.map(n=>`<option value="${n}">${n}（${counts[n]||0} 家）</option>`).join('');
+  const pick=n=>{
+    $('#ctysel').value=n;
+    document.querySelectorAll('.cty').forEach(p=>p.classList.toggle('sel',p.dataset.n===n));
+    document.querySelectorAll('.hdot').forEach(d=>d.classList.toggle('sel',d.dataset.n===n));
+    const list=HOSP.filter(h=>h[0]===n);
+    $('#ctyinfo').innerHTML=`<div class="reveal"><p style="font-family:var(--serif);font-size:22px;font-weight:700;margin:10px 0 2px">${n}</p>
+      <p style="margin-bottom:8px"><span class="big" style="font-size:40px">${list.length}</span> 家重度級急救責任醫院</p>
+      ${list.length?`<ul class="hlist">${list.map(h=>`<li>${h[1]}</li>`).join('')}</ul>`:`<p class="small">目前沒有重度級醫院，緊急或高危險情況可能需要跨縣市轉診。</p>`}
+      ${n==='臺東縣'?`<p class="small" style="color:var(--pink)">臺東是全國早產比率最高的縣市（14.13%），全縣只有 1 家重度級醫院。</p>`:''}</div>`;
+  };
+  document.querySelectorAll('.cty').forEach(p=>p.onclick=()=>pick(p.dataset.n));
+  $('#ctysel').onchange=e=>pick(e.target.value);
+  pick('臺東縣');
+}},
+
 /* 10 結尾 */
-{ gate:true, cta:'再讀一次 ↺', render(){ return `
-  <div class="kicker">終章 · 11 月 15 日</div>
+{ id:'end', toc:'11 月 15 日', short:'八 終章', render(){ return `
+  <div class="kicker">第八章 · 11 月 15 日</div>
   <div class="story"><p>小豆兩歲了。她會跑、會笑、會把餅乾塞進爸爸嘴裡。</p>
-  <p>${ageText()?`${ageText()}那年的雅婷，`:'雅婷'}從沒想過自己會變成「早產兒媽媽」。但她知道，台灣每一年都有一萬多個家庭，走過跟她一樣的路。</p></div>
+  <p><span id="endAge">${endAge()}</span>從沒想過自己會變成「早產兒媽媽」。但她知道，台灣每一年都有一萬多個家庭，走過跟她一樣的路。</p></div>
   <p>每年 <em>11 月 15 日</em>是世界早產兒日。紫色是早產兒的代表色，融合象徵新生喜悅的紅，與象徵挑戰的藍。</p>
   <button class="lamp ${state.lit?'lit':''}" id="lamp">${state.lit?'已點亮':'點亮一盞紫燈'}</button>
   <div id="lout">${state.lit?outro():''}</div>
@@ -523,6 +572,7 @@ const scenes = [
     <li>公費產檢 14 次、3 次超音波、2 次衛教（110 年 7 月起）：<a href="https://mohw.gov.tw/cp-16-75988-1.html" target="_blank" rel="noopener">衛福部新聞稿</a>、<a href="https://www.hpa.gov.tw/Pages/List.aspx?nodeid=194" target="_blank" rel="noopener">國健署產檢項目</a></li>
     <li>居家照護計畫收案對象：<a href="https://www.mohw.gov.tw/fp-16-64021-1.html" target="_blank" rel="noopener">衛福部新聞稿</a>、<a href="https://mohw.gov.tw/cp-7181-81526-1.html" target="_blank" rel="noopener">衛福部新聞稿</a></li>
   </ul></details>
+  <button class="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑ 回到開頭</button>
 `}, mount(){
   $('#lamp').onclick=()=>{
     state.lit=true; $('#lamp').classList.add('lit'); $('#lamp').textContent='已點亮';
@@ -534,40 +584,80 @@ const scenes = [
 ];
 function outro(){return `<div class="reveal" style="text-align:center"><p>謝謝你，為每一雙提早報到的小腳丫點了一盞燈。</p><p class="small">他們輸在起跑點，但可以一起抵達終點。</p></div>`;}
 
-/* ---------- engine ---------- */
-let i=0;
-function unlock(){ nextBtn.disabled=false; }
-function go(n){
-  i=Math.max(0,Math.min(scenes.length-1,n));
-  const s=scenes[i];
-  if(i!==scenes.length-1) document.body.classList.remove('purple');
-  stage.innerHTML=`<section class="scene">${s.render()}</section>`;
-  s.mount && s.mount();
-  if(s.gate && !nextBtn._keep){ /* 等待互動才能前進 */ }
-  nextBtn.disabled = !!s.gate && !alreadyDone(i);
-  if(s.gate && alreadyDone(i)) unlock();
-  nextBtn.textContent = s.cta || (i===scenes.length-2?'最後一章 →':'下一頁 →');
-  if(s.gate && nextBtn.disabled) nextBtn.title='完成本頁互動後即可繼續';
-  prevBtn.disabled = i===0;
-  $('#bar').style.width = (i/(scenes.length-1)*100)+'%';
-  $('#count').textContent = `${i+1} / ${scenes.length}`;
-  window.scrollTo({top:0,behavior:'smooth'});
+/* ---------- engine：分頁籤＋故事分章 ---------- */
+function unlock(){}
+const TABS=[['story','📖 故事'],['subsidy','💜 補助'],['follow','🩺 成長追蹤'],['map','🗺️ 醫院地圖']];
+scenes.forEach((sc,n)=>{ sc.id=sc.id||'c'+n; sc.tab=sc.tab||'story'; });
+const STORY=scenes.map((sc,n)=>n).filter(n=>scenes[n].tab==='story');
+function chapNav(n){
+  const k=STORY.indexOf(n), prev=STORY[k-1], next=STORY[k+1];
+  return `<div class="chapnav">${prev!==undefined?`<button class="btn-ghost" data-ch="${prev}">← 上一章</button>`:''}${
+    next!==undefined?`<button class="btn-main" data-ch="${next}">${k===0?'開始閱讀':'下一章：'+scenes[next].toc} →</button>`
+    :`<button class="btn-main" data-ch="${STORY[0]}">↺ 回到封面</button>`}</div>`;
 }
-const visited=new Set();
-function alreadyDone(n){ return visited.has(n); }
-nextBtn.onclick=()=>{
-  if(nextBtn.disabled) return;
-  visited.add(i);
-  if(i===scenes.length-1){ state.age=null;state.nicu=null;state.lit=false;visited.clear();go(0);return; }
-  go(i+1);
-};
-prevBtn.onclick=()=>{ visited.add(i); go(i-1); };
-document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT') return;
-  if(e.key==='ArrowRight') nextBtn.click();
-  if(e.key==='ArrowLeft') prevBtn.click();
+const foot='<p class="panefoot">本頁數據與資料來源，請見故事最後的 <a href="#end">資料來源</a>。內容僅供參考，個別情況請依醫師評估。</p>';
+stage.innerHTML=TABS.map(([t])=>`<div class="pane" data-tab="${t}" role="tabpanel" ${t==='story'?'':'hidden'}>${
+  scenes.map((sc,n)=>sc.tab!==t?'':`<section class="chap${sc.cover?' cover':''}" id="${sc.id}" data-i="${n}">${sc.render()}${t==='story'?chapNav(n):''}</section>`).join('')
+}${t==='story'?'':foot}</div>`).join('');
+$('#chapbar').innerHTML=STORY.map(n=>`<button class="cb" data-ch="${n}">${scenes[n].short}</button>`).join('');
+$('#tabs').innerHTML=TABS.map(([t,l])=>`<button class="tab" role="tab" data-t="${t}" aria-selected="${t==='story'}">${l}</button>`).join('');
+
+const mounted=new Set();
+const mountSec=sec=>{ const n=+sec.dataset.i; sec.classList.add('inview'); if(!mounted.has(n)){mounted.add(n); scenes[n].mount&&scenes[n].mount();} };
+const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting) mountSec(e.target); }),{rootMargin:'0px 0px -10% 0px',threshold:0.01});
+document.querySelectorAll('.chap').forEach(x=>io.observe(x));
+
+let curCh=STORY[0]; const seenCh=new Set([STORY[0]]);
+function showChapter(n,el){
+  curCh=n; seenCh.add(n);
+  document.querySelectorAll('.pane[data-tab="story"] .chap').forEach(c=>c.hidden=+c.dataset.i!==n);
+  document.querySelectorAll('.cb').forEach(b=>{ const on=+b.dataset.ch===n; b.setAttribute('aria-current',on); b.classList.toggle('done',seenCh.has(+b.dataset.ch)); if(on) b.scrollIntoView({block:'nearest',inline:'center'}); });
+  const sec=document.querySelector(`.chap[data-i="${n}"]`); mountSec(sec);
+  window.scrollTo(0,0);
+  if(el && el!==sec) requestAnimationFrame(()=>el.scrollIntoView({block:'start'}));
+  onScroll();
+}
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-ch]'); if(!b) return; if(curTab!=='story') showTab('story'); showChapter(+b.dataset.ch); });
+
+let curTab='story'; const savedY={};
+function showTab(t,targetId){
+  if(t!==curTab){ savedY[curTab]=scrollY; }
+  curTab=t;
+  document.querySelectorAll('.pane').forEach(p=>p.hidden=p.dataset.tab!==t);
+  document.querySelectorAll('.tab').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));
+  const pane=document.querySelector(`.pane[data-tab="${t}"]`);
+  $('#chapbar').hidden = t!=='story';
+  if(t==='story'){
+    const el=targetId?document.getElementById(targetId):null;
+    if(el){ showChapter(+el.closest('.chap').dataset.i, el); }
+    else { window.scrollTo(0, savedY[t]||0); }
+    onScroll(); return;
+  }
+  if(targetId){
+    const el=document.getElementById(targetId), sec=el.closest('.chap');
+    const secs=[...pane.querySelectorAll('.chap')];
+    secs.slice(0,secs.indexOf(sec)+1).forEach(mountSec);
+    requestAnimationFrame(()=>el.scrollIntoView({block:'start'}));
+  } else {
+    window.scrollTo(0, savedY[t]||0);
+  }
+  onScroll();
+}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#"]'); if(!a) return;
+  const el=document.getElementById(a.getAttribute('href').slice(1)); if(!el) return;
+  e.preventDefault();
+  const pane=el.closest('.pane'); showTab(pane.dataset.tab, el.id);
 });
-go(0);
+
+const onScroll=()=>{
+  const h=document.documentElement;
+  const p = curTab==='story' ? STORY.indexOf(curCh)/(STORY.length-1) : h.scrollTop/(h.scrollHeight-h.clientHeight||1);
+  $('#bar').style.width=(Math.min(1,Math.max(0,p))*100)+'%';
+};
+addEventListener('scroll',onScroll,{passive:true});
+showChapter(STORY[0]);
 
 /* ---------- starfield ---------- */
 (()=>{
